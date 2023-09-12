@@ -16,8 +16,19 @@
  */
 
 // EXTERNAL INCLUDES
+#include <dali/dali.h>
 #include <dali-toolkit/dali-toolkit.h>
 #include <dali/devel-api/adaptor-framework/window-devel.h>
+#include <dali/devel-api/adaptor-framework/offscreen-application.h>
+#include <dali/devel-api/adaptor-framework/offscreen-window.h>
+
+//#include <common/common.h>
+
+//#include <Ecore.h>
+//#include <Eldbus.h>
+#include <tbm_surface.h>
+#include <tbm_surface_internal.h>
+#include <tbm_surface_queue.h>
 
 // INTERNAL INCLUDES
 #include <OffscreenExample.h>
@@ -76,7 +87,7 @@ private:
     tbm_surface_queue_h queue = tbm_surface_queue_create(3, 300, 400, TBM_FORMAT_ARGB8888, TBM_BO_DEFAULT);
 
     OffscreenApplication offscreenApplication = OffscreenApplication::New(queue, OffscreenApplication::RenderMode::AUTO);
-    OffscreenExample offscreenTest( application );
+    OffscreenExample offscreenTest( offscreenApplication );
     application.MainLoop();
   }
 

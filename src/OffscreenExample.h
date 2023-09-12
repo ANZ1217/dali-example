@@ -1,11 +1,11 @@
 #ifndef OFFSCREEN_EXAMPLE_H
 #define OFFSCREEN_EXAMPLE_H
 
-#include <common/common.h>
-#include <memory> ///< for std::unique_ptr
-
+#include <dali/dali.h>
 #include <dali-toolkit/dali-toolkit.h>
 #include <dali/devel-api/adaptor-framework/window-devel.h>
+#include <dali/devel-api/adaptor-framework/offscreen-application.h>
+#include <dali/devel-api/adaptor-framework/offscreen-window.h>
 
 using namespace Dali;
 using namespace Dali::Toolkit;

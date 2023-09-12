@@ -7,20 +7,6 @@ SET(CMAKE_CXX_STANDARD 17)
 SET(dali-example_VERSION_MAJOR 1)
 SET(dali-example_VERSION_MINOR 0)
 
-SET(GCC_COMPILER_VERSION_REQUIRED "6")
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS GCC_COMPILER_VERSION_REQUIRED)
-    message(FATAL_ERROR "The GCC required compiler version is " ${GCC_COMPILER_VERSION_REQUIRED})
-  endif()
-endif()
-
-# Define options to CMake
-OPTION(ENABLE_EXPORTALL          "Enable Export all symbols" OFF)
-OPTION(ENABLE_DEBUG              "Enable Debug" OFF)
-OPTION(ENABLE_TRACE              "Enable Trace" OFF)
-OPTION(ENABLE_PKG_CONFIGURE      "Use pkgconfig" ON)
-OPTION(INTERNATIONALIZATION      "Internationalization demo string names" ON)
-
 SET(ROOT_SRC_DIR ${CMAKE_SOURCE_DIR}/../..)
 GET_FILENAME_COMPONENT(ROOT_SRC_DIR ${ROOT_SRC_DIR} ABSOLUTE) # Make sure the path is absolute
 
@@ -68,7 +54,12 @@ CONFIGURE_FILE( resources-location.in resources-location.cpp )
 # Dependency Checks
 SET(PKG_LIST dali2-core
              dali2-adaptor
-             dali2-toolkit)
+             dali2-toolkit
+             dali2-scene3d)
+SET(PKG_LIST ${PKG_LIST}
+  ecore
+  eldbus
+  libtbm)
 
 INCLUDE(FindPkgConfig)
 PKG_CHECK_MODULES(REQUIRED_PKGS REQUIRED ${PKG_LIST})
@@ -90,10 +81,7 @@ ENDIF()
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${REQUIRED_CFLAGS} ${DALI_EXAMPLE_CFLAGS} -Werror -Wall -fPIE")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_C_FLAGS}")
 
-INCLUDE_DIRECTORIES(
-  ${ROOT_SRC_DIR}/src
-  ${NUMCPP_INCLUDE_DIR}
-  )
+INCLUDE_DIRECTORIES(${ROOT_SRC_DIR}/src)
 
 # Setup for dali-example
 SET(EXAMPLE_SRC_DIR ${ROOT_SRC_DIR}/src)

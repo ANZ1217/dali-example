@@ -1,5 +1,4 @@
-#include <common/common.h>
-#include <memory> ///< for std::unique_ptr
+#include <OffscreenExample.h>
 
 #include <dali-toolkit/dali-toolkit.h>
 #include <dali/devel-api/adaptor-framework/window-devel.h>
