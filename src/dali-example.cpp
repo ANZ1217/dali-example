@@ -19,6 +19,9 @@
 #include <dali-toolkit/dali-toolkit.h>
 #include <dali/devel-api/adaptor-framework/window-devel.h>
 
+// INTERNAL INCLUDES
+#include <OffscreenExample.h>
+
 using namespace Dali;
 using namespace Dali::Toolkit;
 
@@ -68,6 +71,13 @@ private:
     ImageView styledImage = ImageView::New();
     styledImage.SetStyleName( IMAGE_STYLE_NAME );
     window.Add( styledImage );
+
+    // offscreen application new
+    tbm_surface_queue_h queue = tbm_surface_queue_create(3, 300, 400, TBM_FORMAT_ARGB8888, TBM_BO_DEFAULT);
+
+    OffscreenApplication offscreenApplication = OffscreenApplication::New(queue, OffscreenApplication::RenderMode::AUTO);
+    OffscreenExample offscreenTest( application );
+    application.MainLoop();
   }
 
   ///< Called when a key is pressed, we'll use this to quit
