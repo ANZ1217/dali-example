@@ -1,6 +1,6 @@
 <manifest>
 	<define>
-		<domain name="com.samsung.dali-exexamplee" />
+		<domain name="com.samsung.dali-example" />
 		<request>
 			<smack request="dali" type="rwxat" />
 		</request>
