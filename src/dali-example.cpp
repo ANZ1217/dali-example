@@ -22,10 +22,8 @@
 #include <dali/devel-api/adaptor-framework/offscreen-application.h>
 #include <dali/devel-api/adaptor-framework/offscreen-window.h>
 
-//#include <common/common.h>
+#include <thread>
 
-//#include <Ecore.h>
-//#include <Eldbus.h>
 #include <tbm_surface.h>
 #include <tbm_surface_internal.h>
 #include <tbm_surface_queue.h>
@@ -61,6 +59,18 @@ public:
 private:
 
   ///< Called to initialise the application UI
+
+  static void makeOffscreenApplication()
+  {
+    tbm_surface_queue_h queue = tbm_surface_queue_create(3, 300, 400, TBM_FORMAT_ARGB8888, TBM_BO_DEFAULT);
+
+    OffscreenApplication offscreenApplication = OffscreenApplication::New(queue, OffscreenApplication::RenderMode::AUTO);
+    OffscreenExample offscreenTest( offscreenApplication );
+
+    fprintf(stderr, "OffscreenExample MainLoop\n");
+    offscreenApplication.MainLoop();
+  }
+
   void Create( Application& application )
   {
     // Get a handle to the main window & respond to key events
@@ -84,11 +94,9 @@ private:
     window.Add( styledImage );
 
     // offscreen application new
-    tbm_surface_queue_h queue = tbm_surface_queue_create(3, 300, 400, TBM_FORMAT_ARGB8888, TBM_BO_DEFAULT);
 
-    OffscreenApplication offscreenApplication = OffscreenApplication::New(queue, OffscreenApplication::RenderMode::AUTO);
-    OffscreenExample offscreenTest( offscreenApplication );
-    application.MainLoop();
+    fprintf(stderr, "OffscreenExample Create\n");
+    std::thread offscreenThread = std::thread(makeOffscreenApplication);
   }
 
   ///< Called when a key is pressed, we'll use this to quit
@@ -109,6 +117,8 @@ private:
 
 int DALI_EXPORT_API main( int argc, char **argv )
 {
+  fprintf(stderr, "Main\n");
+
   Application application = Application::New( &argc, &argv, STYLE_PATH );
   Example test( application );
   application.MainLoop();
