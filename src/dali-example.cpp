@@ -42,6 +42,11 @@ const char * const IMAGE_STYLE_NAME( "StyledImage" ); ///< The name of the style
 const char * const IMAGE_PATH( DEMO_IMAGE_DIR "silhouette.jpg" ); ///< Image to show
 } // unnamed namespace
 
+namespace
+{
+  std::thread gOffscreenThread;
+}
+
 /// Basic DALi Example to use for debugging small programs on target
 class Example : public ConnectionTracker
 {
@@ -96,7 +101,7 @@ private:
     // offscreen application new
 
     fprintf(stderr, "OffscreenExample Create\n");
-    std::thread offscreenThread = std::thread(makeOffscreenApplication);
+    gOffscreenThread = std::thread(makeOffscreenApplication);
   }
 
   ///< Called when a key is pressed, we'll use this to quit
