@@ -34,6 +34,69 @@
 using namespace Dali;
 using namespace Dali::Toolkit;
 
+// NOTE: Set valid path to get dump files
+#define DUMP_PATH "/media/USBDriveA1"
+
+void DumpTbmToFile(void* data)
+{
+  static int index = 0;
+
+  fprintf(stderr, "DumpTbmToFile data : %p, index : %d\n", data, index);
+
+  tbm_surface_queue_h queue = static_cast<tbm_surface_queue_h>(data);
+
+  tbm_surface_h consumeSurface = NULL;
+
+  // If the rendering to a surface is finished, the surface enqueue. Then you can acquire it.
+  if(tbm_surface_queue_can_acquire(queue, 1))
+  {
+    if(tbm_surface_queue_acquire(queue, &consumeSurface) != TBM_SURFACE_QUEUE_ERROR_NONE)
+    {
+      fprintf(stderr, "Failed to acquire a tbm_surface\n");
+      return;
+    }
+  }
+  else
+  {
+    fprintf(stderr, "can_acquire() failed\n");
+    return;
+  }
+
+  if(!consumeSurface)
+  {
+    fprintf(stderr, "consumeSurface is NULL\n");
+    return;
+  }
+  index++;
+
+  {
+    tbm_surface_internal_ref(consumeSurface);
+
+    int         dumpResult = 0;
+    std::string filename   = "dali-example-" + std::to_string(index);
+
+    // You can check the result of rendering by capturing the buffer.
+    dumpResult = tbm_surface_internal_capture_buffer(consumeSurface, DUMP_PATH, filename.c_str(), "png");
+
+    if(dumpResult == 0)
+    {
+      fprintf(stderr, "[DUMP] Failed on dump. Maybe file of same name exists? or folder not exists?\n");
+    }
+    else
+    {
+      fprintf(stderr, "[DUMP] The frame has been dumped in %s/%s.png\n", DUMP_PATH, filename.c_str());
+    }
+
+    tbm_surface_internal_unref(consumeSurface);
+  }
+
+  if(tbm_surface_internal_is_valid(consumeSurface))
+  {
+    tbm_surface_queue_release(queue, consumeSurface);
+  }
+  consumeSurface = NULL;
+}
+
 namespace
 {
 const char * const STYLE_PATH( DEMO_STYLE_DIR "dali-example.json" ); ///< The style used for this example
@@ -67,7 +130,7 @@ private:
 
   static void makeOffscreenApplication()
   {
-    tbm_surface_queue_h queue = tbm_surface_queue_create(3, 300, 400, TBM_FORMAT_ARGB8888, TBM_BO_DEFAULT);
+    tbm_surface_queue_h queue = tbm_surface_queue_create(3, 256, 256, TBM_FORMAT_ARGB8888, TBM_BO_DEFAULT);
 
     OffscreenApplication offscreenApplication = OffscreenApplication::New(queue, OffscreenApplication::RenderMode::AUTO);
     OffscreenExample offscreenTest( offscreenApplication );

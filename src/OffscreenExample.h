@@ -7,6 +7,8 @@
 #include <dali/devel-api/adaptor-framework/offscreen-application.h>
 #include <dali/devel-api/adaptor-framework/offscreen-window.h>
 
+extern void DumpTbmToFile(void* data);
+
 using namespace Dali;
 using namespace Dali::Toolkit;
 
@@ -19,6 +21,8 @@ public:
 private:
     void Create();
     void Terminate();
+    bool OnTick();
+    void OnFrameRendered();
 
 private:
     OffscreenApplication& mApplication;

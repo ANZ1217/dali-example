@@ -32,3 +32,4 @@ BROWSE
 *.swp
 *.creator
 *.creator.user
+.vscode

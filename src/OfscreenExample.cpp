@@ -20,6 +20,7 @@ const char * const STYLE_PATH( DEMO_STYLE_DIR "dali-example.json" ); ///< The st
 const char * const BACKGROUND_STYLE_NAME( "Background" ); ///< The name of the Background style
 const char * const IMAGE_STYLE_NAME( "StyledImage" ); ///< The name of the styled image style
 const char * const IMAGE_PATH( DEMO_IMAGE_DIR "silhouette.jpg" ); ///< Image to show
+const char * const OFFSCREEN_IMAGE_PATH( DEMO_IMAGE_DIR "offscreen.jpg" ); ///< Image to show
 } // unnamed namespace
 
 OffscreenExample::OffscreenExample(OffscreenApplication& application)
@@ -40,10 +41,34 @@ void OffscreenExample::Create()
     OffscreenWindow window = mApplication.GetWindow();
 
 // TODO: 이미지 분리
-    ImageView image = ImageView::New( IMAGE_PATH );
+    ImageView image = ImageView::New( OFFSCREEN_IMAGE_PATH );
     image.SetProperty( Actor::Property::ANCHOR_POINT, AnchorPoint::CENTER );
     image.SetProperty( Actor::Property::PARENT_ORIGIN, Vector3( 0.5f,  0.25f, 0.5f ) );
     window.Add( image );
+
+    Timer timer = Timer::New(33); // ms
+    timer.TickSignal().Connect(this, &OffscreenExample::OnTick);
+
+    timer.Start();
+
+    fprintf(stderr, "OffscreenExample::OnFrameRendered Create\n");
+    window.SetFrameRenderedCallback(MakeCallback(this, &OffscreenExample::OnFrameRendered));
+}
+
+bool OffscreenExample::OnTick()
+{
+    return true; // Repeat unlimited.
+}
+
+void OffscreenExample::OnFrameRendered()
+{
+    OffscreenWindow window = mApplication.GetWindow();
+
+    fprintf(stderr, "Offscreen OnFrameRendered Called\n");
+    tbm_surface_queue_h queue = AnyCast<tbm_surface_queue_h>(window.GetNativeHandle());
+
+    fprintf(stderr, "Offscreen DumpTbmToFile\n");
+    DumpTbmToFile(static_cast<void*>(queue));
 }
 
 void OffscreenExample::Terminate()
