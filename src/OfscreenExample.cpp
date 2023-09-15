@@ -40,10 +40,8 @@ void OffscreenExample::Create()
 
     OffscreenWindow window = mApplication.GetWindow();
 
-// TODO: 이미지 분리
     ImageView image = ImageView::New( OFFSCREEN_IMAGE_PATH );
-    image.SetProperty( Actor::Property::ANCHOR_POINT, AnchorPoint::CENTER );
-    image.SetProperty( Actor::Property::PARENT_ORIGIN, Vector3( 0.5f,  0.25f, 0.5f ) );
+    image.SetProperty( Actor::Property::ANCHOR_POINT, AnchorPoint::TOP_LEFT );
     window.Add( image );
 
     Timer timer = Timer::New(33); // ms
@@ -68,7 +66,8 @@ void OffscreenExample::OnFrameRendered()
     tbm_surface_queue_h queue = AnyCast<tbm_surface_queue_h>(window.GetNativeHandle());
 
     fprintf(stderr, "Offscreen DumpTbmToFile\n");
-    DumpTbmToFile(static_cast<void*>(queue));
+    //DumpTbmToFile(static_cast<void*>(queue));
+    DumpTbmToBuffer(static_cast<void*>(queue));
 }
 
 void OffscreenExample::Terminate()

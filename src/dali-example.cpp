@@ -21,6 +21,13 @@
 #include <dali/devel-api/adaptor-framework/window-devel.h>
 #include <dali/devel-api/adaptor-framework/offscreen-application.h>
 #include <dali/devel-api/adaptor-framework/offscreen-window.h>
+#include <dali-toolkit/public-api/image-loader/image-url.h>
+#include <dali-toolkit/public-api/image-loader/image.h>
+#include <dali/public-api/adaptor-framework/encoded-image-buffer.h>
+#include <dali/public-api/dali-adaptor-common.h>
+#include <dali/public-api/common/dali-vector.h>
+#include <dali/public-api/common/intrusive-ptr.h>
+#include <dali/public-api/object/base-object.h>
 
 #include <thread>
 
@@ -33,6 +40,102 @@
 
 using namespace Dali;
 using namespace Dali::Toolkit;
+
+namespace
+{
+const char * const STYLE_PATH( DEMO_STYLE_DIR "dali-example.json" ); ///< The style used for this example
+const char * const BACKGROUND_STYLE_NAME( "Background" ); ///< The name of the Background style
+const char * const IMAGE_STYLE_NAME( "StyledImage" ); ///< The name of the styled image style
+const char * const IMAGE_PATH( DEMO_IMAGE_DIR "silhouette.jpg" ); ///< Image to show
+
+const int IMAGE_WIDTH = 256;
+const int IMAGE_HEIGHT = 256;
+} // unnamed namespace
+
+namespace
+{
+  std::thread gOffscreenThread;
+
+  bool gOffscreenRendered = false;
+  PixelData gOffscreenBuffer;
+}
+
+void DumpTbmToBuffer(void* data)
+{
+  static int index = 0;
+
+  fprintf(stderr, "Offscreen DumpTbmToBuffer data : %p, index : %d\n", data, index);
+
+  tbm_surface_queue_h queue = static_cast<tbm_surface_queue_h>(data);
+
+  tbm_surface_h consumeSurface = NULL;
+
+  // If the rendering to a surface is finished, the surface enqueue. Then you can acquire it.
+  if(tbm_surface_queue_can_acquire(queue, 1))
+  {
+    if(tbm_surface_queue_acquire(queue, &consumeSurface) != TBM_SURFACE_QUEUE_ERROR_NONE)
+    {
+      fprintf(stderr, "Failed to acquire a tbm_surface\n");
+      return;
+    }
+  }
+  else
+  {
+    fprintf(stderr, "can_acquire() failed\n");
+    return;
+  }
+
+  if(!consumeSurface)
+  {
+    fprintf(stderr, "consumeSurface is NULL\n");
+    return;
+  }
+  index++;
+
+  {
+    tbm_surface_internal_ref(consumeSurface);
+
+    int         dumpResult = 0;
+    std::string filename   = "dali-example-" + std::to_string(index);
+
+    // convert tbm_surface_h to Dali:Vector<uint8_t>
+    tbm_surface_info_s info;
+    dumpResult = tbm_surface_get_info(consumeSurface, &info);
+
+    if(dumpResult == 0)
+    {
+      fprintf(stderr, "Offscreen tbm surface get info Success.\n");
+    }
+    else
+    {
+      fprintf(stderr, "Offscreen tbm surface get info failed.\n");
+    }
+
+    uint32_t bufferSize = info.planes[0].size;
+    fprintf(stderr, "Offscreen bufferSize: %d\n", bufferSize);
+
+    uint8_t* tmpBuffer = new uint8_t[bufferSize];
+    for(uint32_t i=0;i<bufferSize;i++)
+    {
+      //convert ARGB to RGBA
+      //tmpBuffer[i/4*4+(i+3)%4] = info.planes[0].ptr[i];
+      tmpBuffer[i] = info.planes[0].ptr[i];
+    }
+
+    gOffscreenBuffer = PixelData::New(tmpBuffer, bufferSize, IMAGE_WIDTH, IMAGE_HEIGHT, Pixel::BGRA8888, PixelData::ReleaseFunction::DELETE_ARRAY);
+
+    tbm_surface_internal_unref(consumeSurface);
+  }
+
+  if(tbm_surface_internal_is_valid(consumeSurface))
+  {
+    tbm_surface_queue_release(queue, consumeSurface);
+  }
+
+  consumeSurface = NULL;
+
+  gOffscreenRendered = true;
+}
 
 // NOTE: Set valid path to get dump files
 #define DUMP_PATH "/media/USBDriveA1"
@@ -97,19 +200,6 @@ void DumpTbmToFile(void* data)
   consumeSurface = NULL;
 }
 
-namespace
-{
-const char * const STYLE_PATH( DEMO_STYLE_DIR "dali-example.json" ); ///< The style used for this example
-const char * const BACKGROUND_STYLE_NAME( "Background" ); ///< The name of the Background style
-const char * const IMAGE_STYLE_NAME( "StyledImage" ); ///< The name of the styled image style
-const char * const IMAGE_PATH( DEMO_IMAGE_DIR "silhouette.jpg" ); ///< Image to show
-} // unnamed namespace
-
-namespace
-{
-  std::thread gOffscreenThread;
-}
-
 /// Basic DALi Example to use for debugging small programs on target
 class Example : public ConnectionTracker
 {
@@ -161,6 +251,10 @@ private:
     styledImage.SetStyleName( IMAGE_STYLE_NAME );
     window.Add( styledImage );
 
+    mTimer = Timer::New(33); // ms
+    mTimer.TickSignal().Connect(this, &Example::OnTick);
+    mTimer.Start();
+
     // offscreen application new
 
     fprintf(stderr, "OffscreenExample Create\n");
@@ -179,8 +273,39 @@ private:
     }
   }
 
+  bool OnTick()
+  {
+    //fprintf(stderr, "Offscreen OnTick");
+
+    if(gOffscreenRendered)
+    {
+      fprintf(stderr, "Offscreen gOffscreenRendered is True");
+      Window window = mApplication.GetWindow();
+
+    fprintf(stderr, "Offscreen GetImageUrl");
+      ImageUrl mImageUrl = Image::GenerateUrl(gOffscreenBuffer);
+      ImageView image = ImageView::New();
+
+      Property::Map imagePropertyMap;
+      imagePropertyMap.Insert(Visual::Property::TYPE, Visual::IMAGE);
+      imagePropertyMap.Insert(ImageVisual::Property::URL, mImageUrl.GetUrl());
+
+      image.SetProperty( Actor::Property::ANCHOR_POINT, AnchorPoint::CENTER );
+      image.SetProperty( Actor::Property::PARENT_ORIGIN, Vector3( 0.5f,  0.5f, 0.5f ) );
+      image.SetProperty( ImageView::Property::IMAGE, imagePropertyMap );
+
+      fprintf(stderr, "Window Added New Image");
+      window.Add( image );
+
+      gOffscreenRendered = false;
+    }
+
+    return true;
+  }
+
 private:
   Application&  mApplication;
+  Timer mTimer;
 };
 
 int DALI_EXPORT_API main( int argc, char **argv )

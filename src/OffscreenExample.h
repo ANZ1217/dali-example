@@ -8,6 +8,7 @@
 #include <dali/devel-api/adaptor-framework/offscreen-window.h>
 
 extern void DumpTbmToFile(void* data);
+extern void DumpTbmToBuffer(void* data);
 
 using namespace Dali;
 using namespace Dali::Toolkit;
