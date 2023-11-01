@@ -110,10 +110,10 @@ int gTimerFileDescriptor;
 
 Eina_Bool AppTickTimer(void* data)
 {
-  fprintf(stderr, "AppTickTimer\n");
+  //fprintf(stderr, "AppTickTimer\n");
 
   uint64_t buffer = 1;
-  fprintf(stderr, "timer fd[%d] write!\n", gTimerFileDescriptor);
+  //fprintf(stderr, "timer fd[%d] write!\n", gTimerFileDescriptor);
   size_t size = write(gTimerFileDescriptor, &buffer, sizeof(uint64_t));
   if(size != sizeof(uint64_t))
   {
@@ -143,26 +143,6 @@ Eina_Bool AppTerminateTimer(void* data)
 
 static void main_internal()
 {
-  gQuitFileDescriptor = eventfd(0, EFD_NONBLOCK);
-  gTimerFileDescriptor = eventfd(0, EFD_NONBLOCK);
-
-  ecore_init();
-
-  ecore_timer_add(APP_SECONDS_PER_FRAME, &AppTickTimer, nullptr);
-  ecore_timer_add(APP_TOTAL_RUNNING_TIME_SECONDS, &AppTerminateTimer, nullptr);
-
-  fprintf(stderr, "begin ecore_main_loop\n");
-  ecore_main_loop_begin();
-  fprintf(stderr, "end ecore_main_loop\n");
-}
-
-int DALI_EXPORT_API
-main(int argc, char **argv)
-{
-  fprintf(stderr, "Main\n");
-
-  gMainInternalThread = std::thread(main_internal);
-
   sleep(1);
 
   fprintf(stderr, "Thread 1 Start");
@@ -180,6 +160,26 @@ main(int argc, char **argv)
   gOffscreenThread.join();
 
   fprintf(stderr, "Thread 2 Stop");
+}
+
+int DALI_EXPORT_API
+main(int argc, char **argv)
+{
+  fprintf(stderr, "Main\n");
+
+  gMainInternalThread = std::thread(main_internal);
+
+  gQuitFileDescriptor = eventfd(0, EFD_NONBLOCK);
+  gTimerFileDescriptor = eventfd(0, EFD_NONBLOCK);
+
+  ecore_init();
+
+  ecore_timer_add(APP_SECONDS_PER_FRAME, &AppTickTimer, nullptr);
+  ecore_timer_add(APP_TOTAL_RUNNING_TIME_SECONDS, &AppTerminateTimer, nullptr);
+
+  fprintf(stderr, "begin ecore_main_loop\n");
+  ecore_main_loop_begin();
+  fprintf(stderr, "end ecore_main_loop\n");
 
   return 0;
 }
